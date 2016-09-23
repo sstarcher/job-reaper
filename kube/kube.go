@@ -151,7 +151,7 @@ func (kube *kubeClient) oldestPod(job batch.Job) v1.Pod {
 
 func (kube *kubeClient) pastThreshold(job batch.Job) bool {
 	secondsPast := time.Now().Sub(job.ObjectMeta.CreationTimestamp.Time).Seconds()
-	if uint(secondsPast) > kube.threshold {
+	if uint(secondsPast) > kube.threshold && kube.threshold > 0 {
 		//Can happen when pod can never be scheduled, memory, selectors
 		//TODO look at events
 		return true

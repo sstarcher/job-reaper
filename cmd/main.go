@@ -13,8 +13,8 @@ import (
 var (
 	masterURL  = flag.String("master", "", "url to kubernetes api server")
 	configPath = flag.String("config", "./config.yaml", "path to alerter configuration")
-	threshold  = flag.Uint("threshold", 900, "threshold in seconds for reaping stuck jobs")
-	failures   = flag.Int("failures", 0, "threshold of allowable failures for a job")
+	threshold  = flag.Uint("threshold", 0, "threshold in seconds for reaping stuck jobs")
+	failures   = flag.Int("failures", -1, "threshold of allowable failures for a job")
 	interval   = flag.Int("interval", 30, "interval in seconds to wait between looking for jobs to reap")
 	logLevel   = flag.String("log", "info", "log level - debug, info, warn, error, fatal, panic")
 )
