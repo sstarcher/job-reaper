@@ -58,7 +58,19 @@ stdout:
 ```
 
 ### Kubernetes Pod Definition
-```
-
-
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: job-reaper
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: job-reaper
+    spec:
+      containers:
+      - name: job-reaper
+        image: sstarcher/job-reaper:latest
 ```
