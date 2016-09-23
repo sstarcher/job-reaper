@@ -194,8 +194,8 @@ func (kube *kubeClient) reapNamespace(namespace string) {
 			continue
 		}
 
-		pods := kube.jobPods(job)
-		if len(pods.Items) > 1 { //this and failed should align? remove?
+		pods := kube.jobPods(job) //TODO add support for parallel
+		if len(pods.Items) > 1 {  //this and failed should align? remove?
 			log.Fatalf("%s - There are %d pods in the cluster: Unknown", name, len(pods.Items))
 		} else if len(pods.Items) == 1 {
 			phase := pods.Items[0].Status.Phase
