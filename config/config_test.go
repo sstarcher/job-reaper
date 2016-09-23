@@ -16,7 +16,7 @@ stdout:
     level: info
 `
 
-	config := LoadConfig([]byte(data))
+	config := loadConfig([]byte(data))
 	assert.Equal(t, config.Sensu.Templates["hello"], "bob", "they should be equal")
 	assert.Equal(t, len(config.Sensu.Templates), 2, "they should be equal")
 
@@ -32,7 +32,7 @@ sensu:
 stdout:
     level: derp
 `
-	alerters := Load([]byte(data))
+	alerters := load([]byte(data))
 	assert.Equal(t, len(*alerters), 0, "they should be equal")
 
 }
@@ -43,7 +43,7 @@ stdout:
   level: info
 `
 
-	config := LoadConfig([]byte(data))
+	config := loadConfig([]byte(data))
 	assert.Equal(t, config.Stdout.Level, "info", "they should be equal")
 }
 
@@ -53,6 +53,6 @@ stdout:
   level: derp
 `
 
-	config := LoadConfig([]byte(data))
+	config := loadConfig([]byte(data))
 	assert.Equal(t, config.Stdout.Level, "derp", "they should be equal")
 }

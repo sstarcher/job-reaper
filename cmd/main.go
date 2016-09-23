@@ -5,8 +5,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/sstarcher/job-reaper/config"
 	"github.com/sstarcher/job-reaper/kube"
-	"io/ioutil"
-	"os"
 	"time"
 )
 
@@ -27,16 +25,7 @@ func main() {
 	}
 	log.SetLevel(value)
 
-	data, err := ioutil.ReadFile(*configPath)
-	if os.IsNotExist(err) {
-		log.Warn("Configuration file does not exist defaulting to stdout alerter")
-		data = []byte(`
-stdout:
-  level: info
-`)
-	}
-
-	alerters := config.Load(data)
+	alerters := config.NewConfig(configPath)
 	if len(*alerters) == 0 {
 		log.Fatalf("No valid alerters")
 	}

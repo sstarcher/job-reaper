@@ -6,6 +6,8 @@ import (
 	"github.com/sstarcher/job-reaper/alert/sensu"
 	"github.com/sstarcher/job-reaper/alert/stdout"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 )
@@ -16,8 +18,22 @@ type Config struct {
 	Stdout stdout.Service
 }
 
-// LoadConfig yaml configuration
-func LoadConfig(data []byte) Config {
+var defaultConfig = []byte(`
+stdout:
+  level: info
+`)
+
+// NewConfig loads yaml configuration from path
+func NewConfig(path *string) *[]alert.Alert {
+	data, err := ioutil.ReadFile(*path)
+	if os.IsNotExist(err) {
+		log.Warn("Configuration file does not exist defaulting to stdout alerter")
+		data = defaultConfig
+	}
+	return load(data)
+}
+
+func loadConfig(data []byte) Config {
 	config := Config{}
 	err := yaml.Unmarshal(data, &config)
 	if err != nil {
@@ -27,9 +43,8 @@ func LoadConfig(data []byte) Config {
 	return config
 }
 
-// Load yaml configuration
-func Load(data []byte) *[]alert.Alert {
-	config := LoadConfig(data)
+func load(data []byte) *[]alert.Alert {
+	config := loadConfig(data)
 
 	var alerters = &[]alert.Alert{}
 	process(config.Stdout, alerters)
