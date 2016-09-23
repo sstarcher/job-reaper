@@ -1,0 +1,33 @@
+machine:
+  environment:
+    IMAGE: "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}:latest"
+    GOPATH: "${HOME}/.go_workspace"
+    IMPORT_PATH: "${GOPATH}/src/github.com/${CIRCLE_PROJECT_USERNAME}"
+    APP_PATH: "${IMPORT_PATH}/${CIRCLE_PROJECT_REPONAME}"
+  services:
+    - docker    
+
+dependencies:
+  override:
+    - sudo add-apt-repository ppa:masterminds/glide -y
+    - sudo apt-get update
+    - sudo apt-get install glide -y
+
+test:
+  pre:
+    - mkdir -p "$IMPORT_PATH"
+    - ln -sf "$(pwd)" "${APP_PATH}"
+    - cd "${APP_PATH}" && glide install
+  override:
+    - cd "${APP_PATH}" && go test -cover $(glide nv)
+    - cd "${APP_PATH}" && go build cmd/main.go && cp main job-reaper
+    - docker build -t ${IMAGE} .    
+
+
+deployment:
+  master: 
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PWD
+      - docker push $IMAGE
+      - cp job-reaper $CIRCLE_ARTIFACTS

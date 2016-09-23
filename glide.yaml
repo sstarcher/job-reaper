@@ -1,0 +1,6 @@
+package: github.com/sstarcher/job-reaper
+import:
+- package: github.com/Sirupsen/logrus
+- package: k8s.io/client-go
+  subpackages:
+  - 1.4/kubernetes

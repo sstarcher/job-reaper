@@ -1,0 +1,5 @@
+sensu:
+    address: localhost:3030
+    templates:
+      logs: "https://kibana/#/discover?_g=(time:(from:'{{ .StartTime }}',mode:absolute,to:'{{ .EndTime }}'))&empty_value"
+      exit_code: "{{ .ExitCode }}"
