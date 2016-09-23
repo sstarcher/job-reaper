@@ -179,7 +179,12 @@ func (kube *kubeClient) reapNamespace(namespace string) {
 	for _, job := range jobs.Items {
 		name := job.ObjectMeta.Name
 
-		if job.Status.Succeeded > 0 {
+		var completions = 1
+		if job.Spec.Completions == nil {
+			completions = int(*job.Spec.Completions)
+		}
+
+		if int(job.Status.Succeeded) >= completions {
 			kube.reap(job)
 			continue
 		}
