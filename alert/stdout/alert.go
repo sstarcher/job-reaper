@@ -23,7 +23,7 @@ func (s Service) Validate() error {
 // Send alert to stdout
 func (s Service) Send(data alert.Data) error {
 	value := fmt.Sprintf("%s with exit code [%d] for %s", data.Status, data.ExitCode, data.Message)
-	log.Infof("[%s] Reaping @ [%s] @ %s", data.Name, value, data.EndTime.String())
+	log.Infof("[%s in %s] Reaping @ [%s] @ %s", data.Name, data.Namespace, value, data.EndTime.String())
 
 	return nil
 }
