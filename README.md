@@ -1,9 +1,9 @@
 Job Reaper
 ================
 
-[![CircleCI](https://circleci.com/gh/sstarcher/aws-env.svg?style=svg)](https://circleci.com/gh/sstarcher/aws-env)
-[![](https://imagelayers.io/badge/sstarcher/aws-env:latest.svg)](https://imagelayers.io/?images=sstarcher/aws-env:latest 'Get your own badge on imagelayers.io')
-[![Docker Registry](https://img.shields.io/docker/pulls/sstarcher/aws-env.svg)](https://registry.hub.docker.com/u/sstarcher/aws-env)&nbsp;
+[![CircleCI](https://circleci.com/gh/sstarcher/job-reaper.svg?style=svg)](https://circleci.com/gh/sstarcher/job-reaper)
+[![](https://imagelayers.io/badge/sstarcher/job-reaper:latest.svg)](https://imagelayers.io/?images=sstarcher/job-reaper:latest 'Get your own badge on imagelayers.io')
+[![Docker Registry](https://img.shields.io/docker/pulls/sstarcher/job-reaper.svg)](https://registry.hub.docker.com/u/sstarcher/job-reaper)&nbsp;
 
 This repo outputs reaps and alerts on finished kubernetes jobs.
 
