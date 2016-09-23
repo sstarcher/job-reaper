@@ -31,7 +31,11 @@ Alerter Options
 Alerters are define in the configuration yaml file.  All alerters that are define will be used. 
 
 ###Stdout
-
+* Level - debug, info, warn, error, fatal, panic
+```yaml
+stdout:
+    level: info
+```
 
 ###Sensu
  Sensu has a special templates map that allows for adhoc key/value pairs to be passed to sensu.  The values are processed through golangs templating engine are are URL encoded.  Alerts in uchiwa show up as JIT clients via the name Jobs-NAMESPACE, where namespace is the kubernetes namespace the job was running under.
