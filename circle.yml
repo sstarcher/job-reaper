@@ -20,7 +20,7 @@ test:
     - cd "${APP_PATH}" && glide install
   override:
     - cd "${APP_PATH}" && go test -cover $(glide nv)
-    - cd "${APP_PATH}" && go build cmd/main.go && cp main job-reaper
+    - cd "${APP_PATH}" && CGO_ENABLED=0 go build cmd/main.go && cp main job-reaper
     - docker build -t ${IMAGE} .    
 
 
