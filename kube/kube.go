@@ -27,13 +27,12 @@ type Client interface {
 
 type kubeClient struct {
 	clientset *kubernetes.Clientset
-	threshold uint
 	failures  int
 	alerters  *[]alert.Alert
 }
 
 // NewKubeClient for interfacing with kubernetes
-func NewKubeClient(masterURL string, threshold uint, failures int, alerters *[]alert.Alert) Client {
+func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert) Client {
 	config, err := clientcmd.BuildConfigFromFlags(masterURL, "")
 	if err != nil {
 		log.Panic(err.Error())
@@ -45,7 +44,6 @@ func NewKubeClient(masterURL string, threshold uint, failures int, alerters *[]a
 
 	return &kubeClient{
 		clientset: clientset,
-		threshold: threshold,
 		failures:  failures,
 		alerters:  alerters,
 	}
@@ -149,16 +147,6 @@ func (kube *kubeClient) oldestPod(job batch.Job) v1.Pod {
 	return tempPod
 }
 
-func (kube *kubeClient) pastThreshold(job batch.Job) bool {
-	secondsPast := time.Now().Sub(job.ObjectMeta.CreationTimestamp.Time).Seconds()
-	if uint(secondsPast) > kube.threshold && kube.threshold > 0 {
-		//Can happen when pod can never be scheduled, memory, selectors
-		//TODO look at events
-		return true
-	}
-	return false
-}
-
 func (kube *kubeClient) Reap() {
 	namespaces, err := kube.clientset.Core().Namespaces().List(api.ListOptions{})
 	if err != nil {
@@ -177,8 +165,6 @@ func (kube *kubeClient) reapNamespace(namespace string) {
 	}
 
 	for _, job := range jobs.Items {
-		name := job.ObjectMeta.Name
-
 		var completions = 1
 		if job.Spec.Completions == nil {
 			completions = int(*job.Spec.Completions)
@@ -193,20 +179,5 @@ func (kube *kubeClient) reapNamespace(namespace string) {
 			kube.reap(job)
 			continue
 		}
-
-		pods := kube.jobPods(job) //TODO add support for parallel
-		if len(pods.Items) > 1 {  //this and failed should align? remove?
-			log.Fatalf("%s - There are %d pods in the cluster: Unknown", name, len(pods.Items))
-		} else if len(pods.Items) == 1 {
-			phase := pods.Items[0].Status.Phase
-			if phase != v1.PodRunning { // TODO if it's past the threshold give option to reap / alert?
-				if kube.pastThreshold(job) == true {
-					kube.reap(job)
-				}
-			}
-		} else {
-			log.Fatal(job.Status.Conditions)
-		}
-
 	}
 }

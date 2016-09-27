@@ -11,7 +11,6 @@ import (
 var (
 	masterURL  = flag.String("master", "", "url to kubernetes api server")
 	configPath = flag.String("config", "./config.yaml", "path to alerter configuration")
-	threshold  = flag.Uint("threshold", 0, "threshold in seconds for reaping stuck jobs")
 	failures   = flag.Int("failures", -1, "threshold of allowable failures for a job")
 	interval   = flag.Int("interval", 30, "interval in seconds to wait between looking for jobs to reap")
 	logLevel   = flag.String("log", "info", "log level - debug, info, warn, error, fatal, panic")
@@ -27,10 +26,10 @@ func main() {
 
 	alerters := config.NewConfig(configPath)
 	if len(*alerters) == 0 {
-		log.Fatalf("No valid alerters")
+		log.Fatal("No valid alerters")
 	}
 
-	kube := kube.NewKubeClient(*masterURL, *threshold, *failures, alerters)
+	kube := kube.NewKubeClient(*masterURL, *failures, alerters)
 
 	everyTime := time.Duration(*interval) * time.Second
 	for {

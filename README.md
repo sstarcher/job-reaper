@@ -20,9 +20,6 @@ Command Line Options
 * --master - URL to kubernetes api server (default in-cluster kubernetes)
 * --config - Path to alerter configuration (default ./config.yaml)
     - No configuration defaults to stdout alerter
-* --threshold - Threshold in seconds for reaping stuck jobs (default 0)
-    - threshold applies to pods in a non-running state from the creation time
-    - 0 disables threshold
 * --failures - Threshold of allowable failures for a job (default -1)
     - failures = 0 the job will be reaped on any failures
     - failures = -1 the job will never be reaped on failures
