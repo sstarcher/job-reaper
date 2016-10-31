@@ -1,5 +1,5 @@
-hash: fea5870b93470cc2b0ce19e721be06723b43a62bcbddc2f2712772cfe9d1f0c8
-updated: 2016-09-23T11:08:28.267164424-04:00
+hash: d11b52e8960364c5bd2bde5056d6535aa2286fd7fbc7886bb4c4769ae4bb1687
+updated: 2016-10-31T10:11:54.7765457-04:00
 imports:
 - name: github.com/blang/semver
   version: 60ec3488bfea7cca02b021d106d9911120d25fe9
@@ -59,16 +59,21 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 31c299268d302dd0aa9a0dcf765a3d58971ac83f
 - name: k8s.io/client-go
-  version: 0b62e254fe853d89b1d8d3445bbdab11bcc11bc3
+  version: 3a5b96cfd3d3ff1d53d979b4297c4f3b869aab09
   subpackages:
   - 1.4/discovery
   - 1.4/kubernetes
+  - 1.4/kubernetes/typed/apps/v1alpha1
+  - 1.4/kubernetes/typed/authentication/v1beta1
   - 1.4/kubernetes/typed/authorization/v1beta1
   - 1.4/kubernetes/typed/autoscaling/v1
   - 1.4/kubernetes/typed/batch/v1
+  - 1.4/kubernetes/typed/certificates/v1alpha1
   - 1.4/kubernetes/typed/core/v1
   - 1.4/kubernetes/typed/extensions/v1beta1
   - 1.4/kubernetes/typed/policy/v1alpha1
+  - 1.4/kubernetes/typed/rbac/v1alpha1
+  - 1.4/kubernetes/typed/storage/v1beta1
   - 1.4/pkg/api
   - 1.4/pkg/api/endpoints
   - 1.4/pkg/api/errors
@@ -85,6 +90,12 @@ imports:
   - 1.4/pkg/api/validation
   - 1.4/pkg/apimachinery
   - 1.4/pkg/apimachinery/registered
+  - 1.4/pkg/apis/apps
+  - 1.4/pkg/apis/apps/install
+  - 1.4/pkg/apis/apps/v1alpha1
+  - 1.4/pkg/apis/authentication
+  - 1.4/pkg/apis/authentication/install
+  - 1.4/pkg/apis/authentication/v1beta1
   - 1.4/pkg/apis/authorization
   - 1.4/pkg/apis/authorization/install
   - 1.4/pkg/apis/authorization/v1beta1
@@ -95,12 +106,21 @@ imports:
   - 1.4/pkg/apis/batch/install
   - 1.4/pkg/apis/batch/v1
   - 1.4/pkg/apis/batch/v2alpha1
+  - 1.4/pkg/apis/certificates
+  - 1.4/pkg/apis/certificates/install
+  - 1.4/pkg/apis/certificates/v1alpha1
   - 1.4/pkg/apis/extensions
   - 1.4/pkg/apis/extensions/install
   - 1.4/pkg/apis/extensions/v1beta1
   - 1.4/pkg/apis/policy
   - 1.4/pkg/apis/policy/install
   - 1.4/pkg/apis/policy/v1alpha1
+  - 1.4/pkg/apis/rbac
+  - 1.4/pkg/apis/rbac/install
+  - 1.4/pkg/apis/rbac/v1alpha1
+  - 1.4/pkg/apis/storage
+  - 1.4/pkg/apis/storage/install
+  - 1.4/pkg/apis/storage/v1beta1
   - 1.4/pkg/auth/user
   - 1.4/pkg/capabilities
   - 1.4/pkg/conversion
