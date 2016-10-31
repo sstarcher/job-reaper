@@ -50,12 +50,17 @@ func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert) Clie
 }
 
 func (kube *kubeClient) reap(job batch.Job) {
-	pod := kube.oldestPod(job)
 	data := alert.Data{
-		Name:      job.ObjectMeta.Name,
-		Namespace: job.ObjectMeta.Namespace,
+		Name:      job.GetName(),
+		Namespace: job.GetNamespace(),
 		Status:    "Unknown",
 		Message:   "",
+		Config:    job.GetAnnotations(),
+	}
+
+	pod := kube.oldestPod(job)
+	if scheduledJobName, ok := pod.GetLabels()["run"]; ok {
+		data.Name = scheduledJobName
 	}
 
 	if pod.Status.Phase != "" {
@@ -102,7 +107,7 @@ func (kube *kubeClient) reap(job batch.Job) {
 		}
 	}
 
-	err := kube.clientset.Batch().Jobs(data.Namespace).Delete(data.Name, nil)
+	err := kube.clientset.Batch().Jobs(data.Namespace).Delete(job.GetName(), nil)
 	if err != nil {
 		log.Error(err.Error())
 	}

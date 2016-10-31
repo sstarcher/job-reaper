@@ -19,4 +19,5 @@ type Data struct {
 	EndTime   time.Time
 	ExitCode  int
 	Namespace string
+	Config    map[string]string
 }
