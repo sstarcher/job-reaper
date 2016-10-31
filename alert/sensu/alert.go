@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"regexp"
 	"text/template"
+	"time"
 )
 
 var validNamePattern = regexp.MustCompile(`^[\w\.-]+$`)
@@ -70,11 +71,7 @@ func (s Service) Send(data alert.Data) error {
 		}
 	}
 
-	addr, err := net.ResolveTCPAddr("tcp", s.Address)
-	if err != nil {
-		return err
-	}
-	conn, err := net.DialTCP("tcp", nil, addr)
+	conn, err := net.DialTimeout("tcp", s.Address, time.Second*3)
 	if err != nil {
 		return err
 	}
