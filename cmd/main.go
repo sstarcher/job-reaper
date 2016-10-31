@@ -17,6 +17,7 @@ var (
 )
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
 	flag.Parse()
 	value, err := log.ParseLevel(*logLevel)
 	if err != nil {
