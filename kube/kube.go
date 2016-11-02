@@ -111,6 +111,14 @@ func (kube *kubeClient) reap(job batch.Job) {
 	if err != nil {
 		log.Error(err.Error())
 	}
+
+	pods := kube.jobPods(job)
+	for _, pod := range pods.Items {
+		err := kube.clientset.Core().Pods(data.Namespace).Delete(pod.GetName(), nil)
+		if err != nil {
+			log.Error(err.Error())
+		}
+	}
 }
 
 func (kube *kubeClient) jobPods(job batch.Job) *v1.PodList {
