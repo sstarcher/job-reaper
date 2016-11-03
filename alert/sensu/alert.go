@@ -61,7 +61,7 @@ func (s Service) Send(data alert.Data) error {
 
 	postData["status"] = 0
 	if data.ExitCode != 0 {
-		postData["status"] = 1
+		postData["status"] = 2
 	}
 
 	for k, v := range s.Templates {
