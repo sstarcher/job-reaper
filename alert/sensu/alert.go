@@ -57,7 +57,12 @@ func (s Service) Send(data alert.Data) error {
 	postData["name"] = data.Name
 	postData["source"] = prefix + data.Namespace
 	postData["output"] = data.Message
-	postData["status"] = data.ExitCode
+	postData["exitCode"] = data.ExitCode
+
+	postData["status"] = 0
+	if data.ExitCode != 0 {
+		postData["status"] = 1
+	}
 
 	for k, v := range s.Templates {
 		value, err := generateTemplate(v, data)
