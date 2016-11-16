@@ -2,10 +2,11 @@ package kube
 
 import (
 	"fmt"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/1.4/kubernetes"
 	"k8s.io/client-go/1.4/pkg/api"
-	"time"
 
 	"k8s.io/client-go/1.4/pkg/api/v1"
 	"k8s.io/client-go/1.4/pkg/labels"
@@ -179,7 +180,7 @@ func (kube *kubeClient) reapNamespace(namespace string) {
 
 	for _, job := range jobs.Items {
 		var completions = 1
-		if job.Spec.Completions == nil {
+		if job.Spec.Completions != nil {
 			completions = int(*job.Spec.Completions)
 		}
 
