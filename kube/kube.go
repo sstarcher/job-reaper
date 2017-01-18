@@ -2,6 +2,7 @@ package kube
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -27,13 +28,14 @@ type Client interface {
 }
 
 type kubeClient struct {
-	clientset *kubernetes.Clientset
-	failures  int
-	alerters  *[]alert.Alert
+	clientset  *kubernetes.Clientset
+	failures   int
+	alerters   *[]alert.Alert
+	numReapers int
 }
 
 // NewKubeClient for interfacing with kubernetes
-func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert) Client {
+func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reaperCount int) Client {
 	config, err := clientcmd.BuildConfigFromFlags(masterURL, "")
 	if err != nil {
 		log.Panic(err.Error())
@@ -44,9 +46,10 @@ func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert) Clie
 	}
 
 	return &kubeClient{
-		clientset: clientset,
-		failures:  failures,
-		alerters:  alerters,
+		clientset:  clientset,
+		failures:   failures,
+		alerters:   alerters,
+		numReapers: reaperCount,
 	}
 }
 
@@ -113,6 +116,7 @@ func (kube *kubeClient) reap(job batch.Job) {
 		log.Error(err.Error())
 	}
 
+	log.Debugln("Deleting pods for ", data.Name)
 	pods := kube.jobPods(job)
 	for _, pod := range pods.Items {
 		err := kube.clientset.Core().Pods(data.Namespace).Delete(pod.GetName(), nil)
@@ -120,6 +124,7 @@ func (kube *kubeClient) reap(job batch.Job) {
 			log.Error(err.Error())
 		}
 	}
+	log.Debugln("Done deleting pods for ", data.Name)
 }
 
 func (kube *kubeClient) jobPods(job batch.Job) *v1.PodList {
@@ -161,18 +166,47 @@ func (kube *kubeClient) oldestPod(job batch.Job) v1.Pod {
 	return tempPod
 }
 
+func reaper(kube *kubeClient, jobs <-chan batch.Job, done <-chan struct{}) {
+	for job := range jobs {
+		kube.reap(job)
+
+		select {
+		case <-done:
+			return
+		default:
+			//Noop
+		}
+	}
+}
+
 func (kube *kubeClient) Reap() {
 	namespaces, err := kube.clientset.Core().Namespaces().List(api.ListOptions{})
 	if err != nil {
 		log.Panic(err.Error())
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(kube.numReapers)
+	jobs := make(chan batch.Job, kube.numReapers)
+	done := make(chan struct{})
+	defer close(done)
+
+	for i := 0; i < kube.numReapers; i++ {
+		go func() {
+			reaper(kube, jobs, done)
+			wg.Done()
+		}()
+	}
+
 	for _, namespace := range namespaces.Items {
 		log.Debugf("Processing namespace: %s", namespace.ObjectMeta.Name)
-		kube.reapNamespace(namespace.ObjectMeta.Name)
+		kube.reapNamespace(namespace.ObjectMeta.Name, jobs)
 	}
+	close(jobs)
+	wg.Wait()
 }
 
-func (kube *kubeClient) reapNamespace(namespace string) {
+func (kube *kubeClient) reapNamespace(namespace string, jobQueue chan<- batch.Job) {
 	jobs, err := kube.clientset.Batch().Jobs(namespace).List(api.ListOptions{})
 	if err != nil {
 		log.Panic(err.Error())
@@ -185,12 +219,12 @@ func (kube *kubeClient) reapNamespace(namespace string) {
 		}
 
 		if int(job.Status.Succeeded) >= completions {
-			kube.reap(job)
+			jobQueue <- job
 			continue
 		}
 
 		if int(job.Status.Failed) > kube.failures && kube.failures > -1 {
-			kube.reap(job)
+			jobQueue <- job
 			continue
 		}
 	}
