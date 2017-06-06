@@ -5,3 +5,5 @@ import:
   version: v1.4.0
   subpackages:
   - 1.4/kubernetes
+- package: github.com/emicklei/go-restful/swagger
+  version: v1.2
