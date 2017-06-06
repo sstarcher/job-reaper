@@ -16,6 +16,7 @@ var (
 	interval    = flag.Int("interval", 30, "interval in seconds to wait between looking for jobs to reap")
 	logLevel    = flag.String("log", "info", "log level - debug, info, warn, error, fatal, panic")
 	reaperCount = flag.Int("reapers", 2, "Number of reaper routines to run")
+	bufferRatio = flag.Int("buffer", 1, "Multiplier for buffer size compared to reaper count.")
 )
 
 func main() {
@@ -32,11 +33,15 @@ func main() {
 		log.Fatal("No valid alerters")
 	}
 
-	if *reaperCount < 0 {
+	if *reaperCount <= 0 {
 		log.Fatal("reaper count must be greater than 0")
 	}
 
-	kube := kube.NewKubeClient(*masterURL, *failures, alerters, *reaperCount)
+	if *bufferRatio < 1 {
+		log.Fatal("buffer ratio must be at least 1")
+	}
+
+	kube := kube.NewKubeClient(*masterURL, *failures, alerters, *reaperCount, *bufferRatio)
 
 	everyTime := time.Duration(*interval) * time.Second
 	for {

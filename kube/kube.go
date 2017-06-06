@@ -28,14 +28,15 @@ type Client interface {
 }
 
 type kubeClient struct {
-	clientset  *kubernetes.Clientset
-	failures   int
-	alerters   *[]alert.Alert
-	numReapers int
+	clientset   *kubernetes.Clientset
+	failures    int
+	alerters    *[]alert.Alert
+	numReapers  int
+	bufferDepth int
 }
 
 // NewKubeClient for interfacing with kubernetes
-func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reaperCount int) Client {
+func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reaperCount, bufferDepth int) Client {
 	config, err := clientcmd.BuildConfigFromFlags(masterURL, "")
 	if err != nil {
 		log.Panic(err.Error())
@@ -46,10 +47,11 @@ func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reap
 	}
 
 	return &kubeClient{
-		clientset:  clientset,
-		failures:   failures,
-		alerters:   alerters,
-		numReapers: reaperCount,
+		clientset:   clientset,
+		failures:    failures,
+		alerters:    alerters,
+		numReapers:  reaperCount,
+		bufferDepth: bufferDepth,
 	}
 }
 
@@ -187,10 +189,12 @@ func (kube *kubeClient) Reap() {
 
 	var wg sync.WaitGroup
 	wg.Add(kube.numReapers)
-	jobs := make(chan batch.Job, kube.numReapers)
+	bufferSize := kube.numReapers * kube.bufferDepth
+	jobs := make(chan batch.Job, bufferSize)
 	done := make(chan struct{})
 	defer close(done)
 
+	log.Infof("Spawning %d reapers with buffer depth of %d", kube.numReapers, bufferSize)
 	for i := 0; i < kube.numReapers; i++ {
 		go func() {
 			reaper(kube, jobs, done)
