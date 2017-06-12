@@ -2,6 +2,7 @@ package kube
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -33,6 +34,27 @@ type kubeClient struct {
 	alerters    *[]alert.Alert
 	numReapers  int
 	bufferDepth int
+}
+
+type byCompletion []batch.Job
+
+func (bc byCompletion) Len() int {
+	return len(bc)
+}
+
+func (bc byCompletion) Less(i, j int) bool {
+	if bc[i].Status.CompletionTime == nil {
+		return false
+	}
+
+	if bc[j].Status.CompletionTime == nil {
+		return true
+	}
+	return bc[i].Status.CompletionTime.Before(*bc[j].Status.CompletionTime)
+}
+
+func (bc byCompletion) Swap(i, j int) {
+	bc[i], bc[j] = bc[j], bc[i]
 }
 
 // NewKubeClient for interfacing with kubernetes
@@ -113,20 +135,22 @@ func (kube *kubeClient) reap(job batch.Job) {
 		}
 	}
 
-	err := kube.clientset.Batch().Jobs(data.Namespace).Delete(job.GetName(), nil)
-	if err != nil {
-		log.Error(err.Error())
-	}
-
-	log.Debugln("Deleting pods for ", data.Name)
-	pods := kube.jobPods(job)
-	for _, pod := range pods.Items {
-		err := kube.clientset.Core().Pods(data.Namespace).Delete(pod.GetName(), nil)
+	go func() {
+		err := kube.clientset.Batch().Jobs(data.Namespace).Delete(job.GetName(), nil)
 		if err != nil {
 			log.Error(err.Error())
 		}
-	}
-	log.Debugln("Done deleting pods for ", data.Name)
+
+		log.Debugln("Deleting pods for ", data.Name)
+		pods := kube.jobPods(job)
+		for _, pod := range pods.Items {
+			err := kube.clientset.Core().Pods(data.Namespace).Delete(pod.GetName(), nil)
+			if err != nil {
+				log.Error(err.Error())
+			}
+		}
+		log.Debugln("Done deleting pods for ", data.Name)
+	}()
 }
 
 func (kube *kubeClient) jobPods(job batch.Job) *v1.PodList {
@@ -215,6 +239,8 @@ func (kube *kubeClient) reapNamespace(namespace string, jobQueue chan<- batch.Jo
 	if err != nil {
 		log.Panic(err.Error())
 	}
+
+	sort.Sort(byCompletion(jobs.Items))
 
 	for _, job := range jobs.Items {
 		var completions = 1
