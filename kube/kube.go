@@ -86,7 +86,9 @@ func (kube *kubeClient) reap(job batch.Job) {
 		Config:    job.GetAnnotations(),
 	}
 
-	pod := kube.oldestPod(job)
+	pods := kube.jobPods(job)
+	pod := kube.oldestPod(pods)
+
 	if scheduledJobName, ok := pod.GetLabels()["run"]; ok {
 		data.Name = scheduledJobName
 	}
@@ -142,7 +144,6 @@ func (kube *kubeClient) reap(job batch.Job) {
 		}
 
 		log.Debugln("Deleting pods for ", data.Name)
-		pods := kube.jobPods(job)
 		for _, pod := range pods.Items {
 			err := kube.clientset.Core().Pods(data.Namespace).Delete(pod.GetName(), nil)
 			if err != nil {
@@ -165,6 +166,7 @@ func (kube *kubeClient) jobPods(job batch.Job) *v1.PodList {
 	if err != nil {
 		log.Panic(err.Error())
 	}
+
 	return pods
 }
 
@@ -179,8 +181,7 @@ func (kube *kubeClient) podEvents(pod v1.Pod) *v1.EventList {
 	return events
 }
 
-func (kube *kubeClient) oldestPod(job batch.Job) v1.Pod {
-	pods := kube.jobPods(job)
+func (kube *kubeClient) oldestPod(pods *v1.PodList) v1.Pod {
 	time := time.Now()
 	var tempPod v1.Pod
 	for _, pod := range pods.Items {
