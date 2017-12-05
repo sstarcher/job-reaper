@@ -1,4 +1,6 @@
-TEST?=$$(glide nv)
+TEST? = $$(glide nv)
+
+GO_SOURCE_FILES = $(shell find . -type f -name "*.go" | grep -v /vendor/)
 
 vendor:
 	glide install
@@ -14,7 +16,7 @@ clean:
 test: vendor
 	go test -v $(TEST)
 
-build: vendor
+build: vendor $(GO_SOURCE_FILES)
 	go build -o build/job-reaper cmd/main.go
 
 run: build
