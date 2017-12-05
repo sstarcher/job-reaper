@@ -16,18 +16,20 @@ Docker image: [https://registry.hub.docker.com/u/sstarcher/job-reaper/]
 
 ## Usage
 
-Command Line Options
-* --master - URL to kubernetes api server (default in-cluster kubernetes)
-* --config - Path to alerter configuration (default ./config.yaml)
-    - No configuration defaults to stdout alerter
-* --failures - Threshold of allowable failures for a job (default -1)
-    - failures = 0 the job will be reaped on any failures
-    - failures = -1 the job will never be reaped on failures
-* --interval - Interval in seconds to wait between looking for jobs to reap (default 30 seconds)
-* --log - Level to log - debug, info, warn, error, fatal, panic (default info)
+## Command Line Options
 
-Alerter Options
-Alerters are define in the configuration yaml file.  All alerters that are define will be used. 
+* `-master` - URL to kubernetes api server (default in-cluster kubernetes)
+* `-config` - Path to alerter configuration (default ./config.yaml)
+    - No configuration defaults to stdout alerter
+* `-failures` - Threshold of allowable failures for a job:
+    - `-failures=0`: The job will be reaped on any failures.
+    - `-failures=-1`: The job will never be reaped on failures (default).
+* `-interval` - Interval in seconds to wait between looking for jobs to reap (default 30 seconds)
+* `-log` - Level to log - debug, info, warn, error, fatal, panic (default info)
+
+## Alerter options
+
+Alerters are define in the configuration yaml file.  All alerters that are define will be used.
 
 ###Stdout
 * Level - debug, info, warn, error, fatal, panic
