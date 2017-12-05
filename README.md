@@ -25,9 +25,10 @@ Command Line Options
     - failures = -1 the job will never be reaped on failures
 * --interval - Interval in seconds to wait between looking for jobs to reap (default 30 seconds)
 * --log - Level to log - debug, info, warn, error, fatal, panic (default info)
+* -keep-completed=*duration* - Duration to keep completed jobs (e.g. `-keep-completed=4h`).
 
 Alerter Options
-Alerters are define in the configuration yaml file.  All alerters that are define will be used. 
+Alerters are define in the configuration yaml file.  All alerters that are define will be used.
 
 ###Stdout
 * Level - debug, info, warn, error, fatal, panic

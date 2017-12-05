@@ -29,11 +29,12 @@ type Client interface {
 }
 
 type kubeClient struct {
-	clientset   *kubernetes.Clientset
-	failures    int
-	alerters    *[]alert.Alert
-	numReapers  int
-	bufferDepth int
+	clientset             *kubernetes.Clientset
+	maxFailures           int
+	keepCompletedDuration time.Duration
+	alerters              *[]alert.Alert
+	numReapers            int
+	bufferDepth           int
 }
 
 type byCompletion []batch.Job
@@ -58,7 +59,8 @@ func (bc byCompletion) Swap(i, j int) {
 }
 
 // NewKubeClient for interfacing with kubernetes
-func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reaperCount, bufferDepth int) Client {
+func NewKubeClient(masterURL string, maxFailures int, keepCompletedDuration time.Duration,
+	alerters *[]alert.Alert, reaperCount, bufferDepth int) Client {
 	config, err := clientcmd.BuildConfigFromFlags(masterURL, "")
 	if err != nil {
 		log.Panic(err.Error())
@@ -69,11 +71,12 @@ func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reap
 	}
 
 	return &kubeClient{
-		clientset:   clientset,
-		failures:    failures,
-		alerters:    alerters,
-		numReapers:  reaperCount,
-		bufferDepth: bufferDepth,
+		clientset:             clientset,
+		maxFailures:           maxFailures,
+		keepCompletedDuration: keepCompletedDuration,
+		alerters:              alerters,
+		numReapers:            reaperCount,
+		bufferDepth:           bufferDepth,
 	}
 }
 
@@ -244,19 +247,34 @@ func (kube *kubeClient) reapNamespace(namespace string, jobQueue chan<- batch.Jo
 	sort.Sort(byCompletion(jobs.Items))
 
 	for _, job := range jobs.Items {
-		var completions = 1
-		if job.Spec.Completions != nil {
-			completions = int(*job.Spec.Completions)
-		}
-
-		if int(job.Status.Succeeded) >= completions {
+		if kube.shouldReap(job) {
 			jobQueue <- job
-			continue
-		}
-
-		if int(job.Status.Failed) > kube.failures && kube.failures > -1 {
-			jobQueue <- job
-			continue
 		}
 	}
+}
+
+func (kube *kubeClient) shouldReap(job batch.Job) bool {
+	// Always reap if number of failures has exceed maximum
+	if kube.maxFailures >= 0 && int(job.Status.Failed) > kube.maxFailures {
+		return true
+	}
+
+	// Don't reap anything that hasn't met its completion count
+	if int(job.Status.Succeeded) < getJobCompletions(job) {
+		return false
+	}
+
+	// Don't reap completed jobs that aren't old enough
+	if job.Status.CompletionTime != nil && time.Since(job.Status.CompletionTime.Time) < kube.keepCompletedDuration {
+		return false
+	}
+
+	return true
+}
+
+func getJobCompletions(job batch.Job) int {
+	if job.Spec.Completions != nil {
+		return int(*job.Spec.Completions)
+	}
+	return 1
 }
