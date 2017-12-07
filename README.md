@@ -25,7 +25,8 @@ Command Line Options
     - failures = -1 the job will never be reaped on failures
 * --interval - Interval in seconds to wait between looking for jobs to reap (default 30 seconds)
 * --log - Level to log - debug, info, warn, error, fatal, panic (default info)
-* -keep-completed=*duration* - Duration to keep completed jobs (e.g. `-keep-completed=4h`).
+* `-keep-completed=*duration*` - Duration to keep completed jobs (e.g. `-keep-completed=4h`).
+* `-ignore-owned` - Ignore jobs owned by other resources, e.g. by `CronJob`s (which have their own reaping logic).
 
 Alerter Options
 Alerters are define in the configuration yaml file.  All alerters that are define will be used.

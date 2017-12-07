@@ -35,6 +35,7 @@ type kubeClient struct {
 	alerters              *[]alert.Alert
 	numReapers            int
 	bufferDepth           int
+	ignoreOwned           bool
 }
 
 type byCompletion []batch.Job
@@ -59,7 +60,9 @@ func (bc byCompletion) Swap(i, j int) {
 }
 
 // NewKubeClient for interfacing with kubernetes
-func NewKubeClient(masterURL string, maxFailures int, keepCompletedDuration time.Duration,
+func NewKubeClient(masterURL string, maxFailures int,
+	keepCompletedDuration time.Duration,
+	ignoreOwned bool,
 	alerters *[]alert.Alert, reaperCount, bufferDepth int) Client {
 	config, err := clientcmd.BuildConfigFromFlags(masterURL, "")
 	if err != nil {
@@ -77,6 +80,7 @@ func NewKubeClient(masterURL string, maxFailures int, keepCompletedDuration time
 		alerters:              alerters,
 		numReapers:            reaperCount,
 		bufferDepth:           bufferDepth,
+		ignoreOwned:           ignoreOwned,
 	}
 }
 
@@ -254,6 +258,10 @@ func (kube *kubeClient) reapNamespace(namespace string, jobQueue chan<- batch.Jo
 }
 
 func (kube *kubeClient) shouldReap(job batch.Job) bool {
+	if kube.ignoreOwned && len(job.ObjectMeta.OwnerReferences) > 0 {
+		return false
+	}
+
 	// Always reap if number of failures has exceed maximum
 	if kube.maxFailures >= 0 && int(job.Status.Failed) > kube.maxFailures {
 		return true

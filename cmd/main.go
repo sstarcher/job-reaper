@@ -18,6 +18,7 @@ var (
 	logLevel              = flag.String("log", "info", "log level - debug, info, warn, error, fatal, panic")
 	reaperCount           = flag.Int("reapers", 2, "Number of reaper routines to run")
 	bufferRatio           = flag.Int("buffer", 1, "Multiplier for buffer size compared to reaper count.")
+	ignoreOwned           = flag.Bool("ignore-owned", false, "ignore jobs owned by other objects (e.g. CronJobs)")
 )
 
 func main() {
@@ -42,7 +43,8 @@ func main() {
 		log.Fatal("buffer ratio must be at least 1")
 	}
 
-	kube := kube.NewKubeClient(*masterURL, *failures, *keepCompletedDuration, alerters, *reaperCount, *bufferRatio)
+	kube := kube.NewKubeClient(*masterURL, *failures, *keepCompletedDuration,
+		*ignoreOwned, alerters, *reaperCount, *bufferRatio)
 
 	everyTime := time.Duration(*interval) * time.Second
 	for {
