@@ -9,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/1.4/kubernetes"
 	"k8s.io/client-go/1.4/pkg/api"
+	apiErrors "k8s.io/client-go/1.4/pkg/api/errors"
 
 	"k8s.io/client-go/1.4/pkg/api/v1"
 	"k8s.io/client-go/1.4/pkg/labels"
@@ -86,7 +87,15 @@ func (kube *kubeClient) reap(job batch.Job) {
 		Config:    job.GetAnnotations(),
 	}
 
-	pods := kube.jobPods(job)
+	pods, err := kube.jobPods(job)
+
+	if err != nil {
+		if _, ok := err.(*apiErrors.StatusError); ok {
+			log.Warnf("Could not fetch jobPods. Skipping for now. Error: %v", err)
+			return
+		}
+		log.Panic(err.Error())
+	}
 	pod := kube.oldestPod(pods)
 
 	if scheduledJobName, ok := pod.GetLabels()["run"]; ok {
@@ -154,7 +163,7 @@ func (kube *kubeClient) reap(job batch.Job) {
 	}()
 }
 
-func (kube *kubeClient) jobPods(job batch.Job) *v1.PodList {
+func (kube *kubeClient) jobPods(job batch.Job) (*v1.PodList, error) {
 	controllerUID := job.Spec.Selector.MatchLabels["controller-uid"]
 	selector := labels.NewSelector()
 	requirement, err := labels.NewRequirement("controller-uid", selection.Equals, sets.NewString(controllerUID))
@@ -164,10 +173,10 @@ func (kube *kubeClient) jobPods(job batch.Job) *v1.PodList {
 	selector = selector.Add(*requirement)
 	pods, err := kube.clientset.Core().Pods(job.ObjectMeta.Namespace).List(api.ListOptions{LabelSelector: selector})
 	if err != nil {
-		log.Panic(err.Error())
+		log.Error(err.Error())
 	}
 
-	return pods
+	return pods, err
 }
 
 func (kube *kubeClient) podEvents(pod v1.Pod) *v1.EventList {
