@@ -64,6 +64,8 @@ func NewKubeClient(masterURL string, failures int, alerters *[]alert.Alert, reap
 	if err != nil {
 		log.Panic(err.Error())
 	}
+	config.QPS = float32(3 * reaperCount)
+	config.Burst = int(2 * config.QPS)
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Panic(err.Error())
