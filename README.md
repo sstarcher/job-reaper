@@ -26,6 +26,8 @@ Docker image: [https://registry.hub.docker.com/u/sstarcher/job-reaper/]
     - `-failures=-1`: The job will never be reaped on failures (default).
 * `-interval` - Interval in seconds to wait between looking for jobs to reap (default 30 seconds)
 * `-log` - Level to log - debug, info, warn, error, fatal, panic (default info)
+* `-keep-completed=*duration*` - Duration to keep completed jobs (e.g. `-keep-completed=4h`).
+* `-ignore-owned` - Ignore jobs owned by other resources, e.g. by `CronJob`s (which have their own reaping logic).
 
 ## Alerter options
 
